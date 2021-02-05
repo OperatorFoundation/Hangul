@@ -1,0 +1,26 @@
+#######################################
+# Syntax Coloring Map For Hangul
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+HangulInputContext	KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+
+hangul_ic_new	KEYWORD2
+hangul_ic_flush	KEYWORD2
+hangul_ic_reset	KEYWORD2
+hangul_ic_process	KEYWORD2
+hangul_ic_backspace	KEYWORD2
+hangul_ic_delete	KEYWORD2
+hangul_ic_preedit_string	KEYWORD2
+hangul_ic_get_commit_string	KEYWORD2
+
+#######################################
+# Constants (LITERAL1)
+#######################################
