@@ -168,6 +168,10 @@ const char*  hanja_get_key(const Hanja* hanja);
 const char*  hanja_get_value(const Hanja* hanja);
 const char*  hanja_get_comment(const Hanja* hanja);
 
+// Begin Arduino compatibility
+char *ucschar_to_char(const ucschar *ucs);
+// End Arduino compatibility
+
 #ifdef __cplusplus
 }
 #endif

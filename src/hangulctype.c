@@ -24,6 +24,14 @@
 
 #include "hangul.h"
 
+// Begin Arduino compatibility
+#include <stdio.h>
+#include <stdlib.h>
+#include <locale.h>
+#include <strings.h>
+#include <langinfo.h>
+// End Arduino compatibility
+
 /**
  * @defgroup hangulctype 한글 글자 조작
  * 
@@ -1726,3 +1734,44 @@ hangul_jamos_to_syllables(ucschar* dest, int destlen, const ucschar* src, int sr
 
     return destlen - outleft;
 }
+
+// Begin Arduino compatibility
+int ucscharlen(const ucschar *str)
+{
+    const ucschar *end = str;
+    while (*end != 0)
+        end++;
+    return end - str;
+}
+
+char *ucschar_to_char(const ucschar *ucs)
+{
+    int len = ucscharlen(ucs);
+
+    wchar_t *wcs = (wchar_t *)malloc(sizeof(wchar_t) * len);
+    char *cs = (char *)malloc(sizeof(char) * len);
+
+    // FIXME: Is this correct?
+    for (int x=0; x < len; x++)
+    {
+        wcs[x] = ucs[x];
+    }
+
+    /* load native locale */
+    if (setlocale(LC_ALL, "") == NULL)
+    {
+        return NULL;
+    }
+
+    /* check if charset is UTF-8 */
+    if (strcasecmp(nl_langinfo(CODESET), "UTF-8"))
+    {
+        return NULL;
+    }
+
+    snprintf(cs, len, "%ld", cs);
+
+    return cs;
+}
+
+// End Arduino compatibility
