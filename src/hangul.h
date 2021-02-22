@@ -170,6 +170,7 @@ const char*  hanja_get_comment(const Hanja* hanja);
 
 // Begin Arduino compatibility
 char *ucschar_to_char(const ucschar *ucs);
+int ucscharlen(const ucschar *str);
 // End Arduino compatibility
 
 #ifdef __cplusplus

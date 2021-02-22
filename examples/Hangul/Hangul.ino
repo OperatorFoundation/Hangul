@@ -13,15 +13,18 @@ void setup() {
 
     hangul_ic_flush(hic);
     const ucschar *ucsstr = hangul_ic_get_commit_string(hic);
-    char *cstr = ucschar_to_char(ucstr);
+    char *cstr = ucschar_to_char(ucsstr);
     String result = String(cstr);
 
     hangul_ic_reset(hic);
     hangul_ic_delete(hic);
 
-    Serial.println("Input:   ", ""input);
-    Serial.println("Result:  ", ""result);
-    Serial.println("Correct: ", ""correct);
+    Serial.print("Input:   ");
+    Serial.println(input);
+    Serial.print("Result:  ");
+    Serial.println(result);
+    Serial.print("Correct: ");
+    Serial.println(correct);
 }
 
 void loop() {
