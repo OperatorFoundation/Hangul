@@ -165,6 +165,139 @@
  * 손쉽게 구현할 수 있다.
  * 내부의 데이터 멤버는 공개되어 있지 않다. 각각의 멤버는 accessor 함수로만
  * 참조하여야 한다.
+ *
+ * English by Google Translate
+ * @defgroup Hangulic Hangul input function implementation
+ *
+ * @section hangulicusage How to use Hangul Input Context
+ * This section describes the core functions that implement the Hangul input function.
+ *
+ * First, I will explain the terms preedit string and commit string.
+ * These two terms are widely used expressions in the Unix-like input method framework.
+ *
+ * The preedit string is not yet fully entered into the application as it is being assembled.
+ * Points to a string. In general, it looks reversed in the Hangul input device.
+ * In Japanese and Chinese input method, an underline is attached. not finished yet
+ * Since it is an undefined string, it may not be delivered to the application and may disappear.
+ *
+ * Commit string is a string that is delivered to the application after the combination is completed.
+ * This string is recognized as the text of the actual application, so after this
+ * It is no longer data that the input device can manage.
+ *
+ * The Korean input process goes through the following steps.
+ * After converting the input English key into the corresponding Korean alphabet, the Korean alphabet is collected.
+ * Makes one syllable. The process up to this point is in the form of a preedit string.
+ * It is necessary to keep it visible to the user.
+ * Then, when the Hangul syllable is completed, commit the character to the application
+ * It completes the input by sending it in the form of a string. When you get the next key
+ * Repeat this process.
+ * 
+ * Hangul combination function in libhangul is implemented using @ref HangulInputContext
+ * The basic method is to input input from the user to @ref HangulInputContext.
+ * As the state changes while passing in order, the preedit or commit string is
+ * It can be changed according to the situation.
+ *
+ * Input codes are closely tied to the GUI code and receive key events
+ * It is usually implemented to handle it. However, Unix has many input frameworks.
+ * Due to the current situation, I wrote a Hangul combination routine for each input framework.
+ * Putting it in is inefficient. Implementing a simple API, directly from multiple frameworks
+ * Usability increases if implemented so that it can be used.
+
+ *
+ * So, in libhangul, the ASCII code is not overridden
+ * There is not a lot of data that has been redefined in the direction of direct use.
+ * For actual usage, it is better to use the sample code than to explain it in words.
+ * It will be easy to understand. So, the approximate process is sample code.
+ * Written.
+ *
+ * The example below uses GUI library code that does not actually exist.
+ * With actual GUI code, the code is too long to explain, and the code is
+ * Because it is easy to miss the point when it is long, a fictitious function is used.
+ * Also, the text related to encoding conversion is omitted.
+ * The fictitious GUI code used here starts with TWin.
+ *    
+ * @code
+    HangulInputContext* hic = hangul_ic_new("2");
+    ...
+    // Below is an event loop that only handles key input.
+    // Although the actual GUI code is not so simple
+    // For convenience, I wrote a code that only handles key input
+    TWinKeyEvent event = TWinGetKeyEvent(); // A function like this that receives key events
+              // let's say there is
+    while (ascii != 0) {
+  bool res;
+  if (event.isBackspace()) {
+      // backspace I'm a bit reluctant to convert to ascii
+      //  In libhangul, for backspace handling
+      // I created a separate function.
+      res = hangul_ic_backspace(hic);
+  } else {
+      // Convert keystrokes to the corresponding ascii code.
+      // in libhangul, this ascii code is key event
+      // Same as code.
+      int ascii = event.getAscii();
+      //When a keystroke is received, it is first sent to hic.
+      // so that hic can decide whether to use this key or not.
+      // If the function returns true, it means that this key was used
+      // Make sure your GUI code doesn't process this keystroke.
+      // Otherwise, one keystroke is processed twice.
+      res = hangul_ic_process(hic, ascii);
+  }
+  
+  // After receiving a key input once, hic changes its internal state.
+  // There may be situations where you need to send the completed text to the application.
+  // Check if there is a commit string in HangulInputContext
+  // judge Receive the commit string and if there is a string
+  // Assume that the input has been completed with that string.
+
+
+  const ucschar commit;
+  commit = hangul_ic_get_commit_string(hic);
+  if (commit[0] != 0) { //Measure the length of the string to see if there is a commit string.
+        // judge
+      TWinInputUnicodeChars(commit);
+  }
+  //After keystroke, the preedit string also changes.
+  // In the input method framework, this string should be displayed on the screen.
+  // The character being combined is displayed on the screen.
+  const ucschar preedit;
+  preedit = hangul_ic_get_preedit_string(hic);
+  // In this case, always update regardless of the length of the string
+  // Should be. Because there is a letter that was being combined before
+  // As the combination is completed, the character in the state of being combined may disappear
+  // preedit the current string regardless of the length of the string
+  // Show it as a string.
+  TWinUpdatePreeditString(preedit);
+  // After the above two tasks are done, should I continue to process the key event?
+  // Should handle whether or not
+  // If hic didn't use key events, continue to the main GUI code
+  // Let the key event processing proceed.
+
+
+  if (!res)
+      TWinForwardKeyEventToUI(ascii);
+  ascii = GetKeyEvent();
+    }
+    hangul_ic_delete(hic);
+     
+ * @endcode
+ */
+
+/**
+ * @file hangulinputcontext.c
+ */
+
+/**
+ * @ingroup hangulic
+ * @typedef HangulInputContext
+ * @brief object to manage the state of Korean input
+ *
+ * opaque to save state information in Hangul combination routine provided by libhangul
+ * It is a data object. By sending key input information to this object sequentially,
+ * If you receive a preedit string or a commit string and process it, the Korean input function will be activated.
+ * Easy to implement.
+ * Internal data members are not disclosed. Each member is only an accessor function
+ * Refer to.
  */
 
 #ifndef TRUE
@@ -560,6 +693,8 @@ hangul_ic_choseong_to_jongseong(HangulInputContext* hic, ucschar cho)
     } else {
   /* 옛글 조합 규칙을 사용하는 자판의 경우에는 종성이 conjoinable
    * 하지 않아도 상관없다 */
+  /* In the case of a keyboard that uses the old text combination rule, the ending is conjoinable
+   * It doesn't matter if you don't */
   int type = hangul_keyboard_get_type(hic->keyboard);
   switch (type) {
   case HANGUL_KEYBOARD_TYPE_JAMO_YET:
@@ -578,6 +713,8 @@ hangul_ic_combine(HangulInputContext* hic, ucschar first, ucschar second)
   if (hangul_keyboard_get_type(hic->keyboard) == HANGUL_KEYBOARD_TYPE_JAMO) {
       /* 옛한글은 아래 규칙을 적용하지 않아야 입력가능한 글자가 있으므로
        * 적용하지 않는다. */
+      /* Old Hangul has characters that cannot be entered unless the rules below are applied.
+       * Does not apply. */
       if (first == second &&
     hangul_is_jamo_conjoinable(first)) {
     return 0;
@@ -710,6 +847,9 @@ hangul_ic_process_jamo(HangulInputContext *hic, ucschar ch)
       /* 초성을 입력한 combine 함수에서 종성이 나오게 된다면
        * 이전 초성도 종성으로 바꿔 주는 편이 나머지 처리에 편리하다.
        * 이 기능은 MS IME 호환기능으로 ㄳ을 입력하는데 사용한다. */
+      /* If the final sound comes out of the combine function that entered the initial sound
+       * It is more convenient to process the rest of the previous first and last consonants.
+       * This function is used to input ㄳ as an MS IME compatibility function. */
       if (hangul_is_jongseong(combined)) {
     hic->buffer.choseong = 0;
     ucschar pop = hangul_ic_pop(hic);
@@ -1067,6 +1207,33 @@ flush:
  * 이 함수의 사용법에 대한 설명은 @ref hangulicusage 부분을 참조한다.
  *
  * @remarks 이 함수는 @ref HangulInputContext 의 상태를 변화 시킨다.
+ *
+ * English By Google translate
+ * @brief A function that actually composes Hangul by processing key input
+ * @param hic @ref HangulInputContext object
+ * @param ascii key event
+ * @return @ref true if HangulInputContext used this key,
+ * false if not used
+ *
+ * Receives a key event given as an ascii value and displays the internal Hangul combination state.
+ * Make changes and save preedit and commit strings.
+ *
+ * The key event process of libhangul is handled based on ASCII code values.
+ * This key value corresponds to the key value in the US Qwerty keyboard layout.
+ * Therefore, if you are using a European keyboard, you can directly enter the ASCII code of the key.
+ * Do not pass it on, and it may occur if the key is a US Qwerty keyboard.
+ * ASCII code value must be given.
+ * Also, since it is an ASCII code, the shift state is transmitted in uppercase.
+ * If Capslock is pressed, the case is not sent in reverse
+ * Be careful as it may act as if Shift is pressed.
+ * preedit and commit strings are hangul_ic_get_preedit_string(),
+ * It can be obtained using hangul_ic_get_commit_string() function.
+ *
+ * For the description of how to use this function, refer to @ref hangulicusage.
+ *
+ * @remarks This function changes the state of @ref HangulInputContext.
+
+
  */
 bool
 hangul_ic_process(HangulInputContext *hic, int ascii)
@@ -1110,6 +1277,18 @@ hangul_ic_process(HangulInputContext *hic, int ascii)
  * 따라서 hic가 다른 키 이벤트를 처리하고 나면 그 내용이 바뀔 수 있다.
  * 
  * @remarks 이 함수는 @ref HangulInputContext 의 상태를 변화 시키지 않는다.
+ *EbGT
+ * @brief Function to get the preedit string of the current state
+ * @param hic input state object for which you want to get preedit string
+ * @return UCS4 preedit string, since this string is data inside @a hic
+ * It must not be modified or freed.
+ *
+ * This function returns the preedit string of the current state inside @a hic.
+ * So after the hic handles another key event, its contents may change.
+ *
+ * @remarks This function does not change the state of @ref HangulInputContext.
+
+
  */
 const ucschar*
 hangul_ic_get_preedit_string(HangulInputContext *hic)
@@ -1131,6 +1310,19 @@ hangul_ic_get_preedit_string(HangulInputContext *hic)
  * 따라서 hic가 다른 키 이벤트를 처리하고 나면 그 내용이 바뀔 수 있다.
  *
  * @remarks 이 함수는 @ref HangulInputContext 의 상태를 변화 시키지 않는다.
+ *
+ * English by Gooolgle Translate
+ * @brief Function to get the commit string of the current state
+ * @param hic input state object for which you want to obtain commit string
+ * @return UCS4 commit string, since this string is data inside @a hic
+ * It must not be modified or freed.
+ *
+ * This function returns the commit string of the current state inside @a hic.
+ * So after the hic handles another key event, its contents may change.
+ *
+ * @remarks This function does not change the state of @ref HangulInputContext.
+
+
  */
 const ucschar*
 hangul_ic_get_commit_string(HangulInputContext *hic)
@@ -1154,6 +1346,20 @@ hangul_ic_get_commit_string(HangulInputContext *hic)
  * 비교: hangul_ic_flush()
  *
  * @remarks 이 함수는 @ref HangulInputContext 의 상태를 변화 시킨다.
+ * 
+ *EbGT
+ * @ingroup hangulic
+ * @brief @ref Function to return HangulInputContext to its initial state
+ * @param hic @ref Pointer to HangulInputContext
+ *
+ * This function retrieves the state of @ref HangulInputContext pointed to by @a hic.
+ * Return to initial state. preedit string, commit string, flush string
+ * disappears, and the record of the entered key is lost.
+ * It does not change to English status.
+ *
+ * Comparison: hangul_ic_flush()
+ *
+ * @remarks This function changes the state of @ref HangulInputContext.
  */
 void
 hangul_ic_reset(HangulInputContext *hic)
@@ -1195,6 +1401,21 @@ hangul_ic_flush_internal(HangulInputContext *hic)
  * 비교: hangul_ic_reset()
  *
  * @remarks 이 함수는 @ref HangulInputContext 의 상태를 변화 시킨다.
+ * Englsish by Google Translate
+ * @brief @ref Function to complete the input state of HangulInputContext
+ * @param hic @ref Pointer to HangulInputContext
+ * @return The combined string, if the length of the string is 0, the combined string is
+ * nothing
+ *
+ * This function completes the input state of the @ref HangulInputContext pointed to by @a hic.
+ * Completes the string being assembled and returns it. And the input state is the initial state
+ * go back This function is used when you want to forcibly commit the character being combined.
+ * Normally, when the input framework loses focus, this function is called
+ * You must complete the state so that you do not lose the letters you were combining.
+ *
+ * Comparison: hangul_ic_reset()
+ *
+ * @remarks This function changes the state of @ref HangulInputContext.
  */
 const ucschar*
 hangul_ic_flush(HangulInputContext *hic)
@@ -1232,6 +1453,16 @@ hangul_ic_flush(HangulInputContext *hic)
  * 반드시 업데이트를 해야 한다.
  *
  * @remarks 이 함수는 @ref HangulInputContext 의 상태를 변화 시킨다.
+ * 
+ *EbGT
+ * @brief @ref Function to make HangulInputContext handle the backspace key
+ * @param hic @ref Pointer to HangulInputContext
+ * @return true if @a hic used the key, false otherwise
+ *
+ * This function retrieves the character being assembled in the @ref HangulInputContext pointed to by @a hic.
+ * Function to delete one from the back. Fired when the backspace key is pressed
+ * Take action. Therefore, after calling this function, the preedit string is changed.
+ * Must be updated.
  */
 bool
 hangul_ic_backspace(HangulInputContext *hic)
@@ -1258,6 +1489,14 @@ hangul_ic_backspace(HangulInputContext *hic)
  * @ref HangulInputContext 가 조합중인 글자가 있으면 true를 리턴한다.
  *
  * @remarks 이 함수는 @ref HangulInputContext 의 상태를 변화 시키지 않는다.
+ *
+ * EbGT
+ * @brief @ref Function to check if HangulInputContext has the character being assembled
+ * @param hic @ref Pointer to HangulInputContext
+ *
+ * @ref Returns true if there is a character that HangulInputContext is combining.
+ *
+ * @remarks This function does not change the state of @ref HangulInputContext.
  */
 bool
 hangul_ic_is_empty(HangulInputContext *hic)
@@ -1273,6 +1512,14 @@ hangul_ic_is_empty(HangulInputContext *hic)
  * @ref HangulInputContext 가 조합중인 글자가 초성이 있으면 true를 리턴한다.
  *
  * @remarks 이 함수는 @ref HangulInputContext 의 상태를 변화 시키지 않는다.
+ * 
+ * EbGT
+ * @brief @ref Function to check if HangulInputContext has the initial consonant being assembled
+ * @param hic @ref Pointer to HangulInputContext
+ *
+ * @ref Returns true if the character that HangulInputContext is combining has an initial consonant.
+ *
+ * @remarks This function does not change the state of @ref HangulInputContext.
  */
 bool
 hangul_ic_has_choseong(HangulInputContext *hic)
@@ -1288,6 +1535,14 @@ hangul_ic_has_choseong(HangulInputContext *hic)
  * @ref HangulInputContext 가 조합중인 글자가 중성이 있으면 true를 리턴한다.
  *
  * @remarks 이 함수는 @ref HangulInputContext 의 상태를 변화 시키지 않는다.
+ *
+ * English By Google Translate
+ * @brief @ref Function to check if HangulInputContext has a neutral that is being assembled
+ * @param hic @ref Pointer to HangulInputContext
+ *
+ * @ref Returns true if HangulInputContext has a neutral character.
+ *
+ * @remarks This function does not change the state of @ref HangulInputContext.
  */
 bool
 hangul_ic_has_jungseong(HangulInputContext *hic)
@@ -1303,6 +1558,16 @@ hangul_ic_has_jungseong(HangulInputContext *hic)
  * @ref HangulInputContext 가 조합중인 글자가 종성이 있으면 true를 리턴한다.
  *
  * @remarks 이 함수는 @ref HangulInputContext 의 상태를 변화 시키지 않는다.
+ *
+ *EbGT
+ * @brief @ref Function to check if HangulInputContext has the finality being assembled
+ * @param hic @ref Pointer to HangulInputContext
+ *
+ * @ref Returns true if HangulInputContext has a final character.
+ *
+ * @remarks This function does not change the state of @ref HangulInputContext.
+
+
  */
 bool
 hangul_ic_has_jongseong(HangulInputContext *hic)
@@ -1318,6 +1583,14 @@ hangul_ic_has_jongseong(HangulInputContext *hic)
  *        @ref hangul_ic_set_option 에서 사용 가능한 옵션을 확인하라.
  *
  * @return @ref HangulInputContext 에 설정된 옵션값을 리턴한다.
+ *
+ *EbGT 
+ * @brief @ref Function to check the combination option of HangulInputContext
+ * @param hic @ref Pointer to HangulInputContext
+ * @param option @ref HangulInputContext combination processing option.
+ * Check available options in @ref hangul_ic_set_option.
+ *
+ * @return @ref Returns the option value set in HangulInputContext.
  */
 bool
 hangul_ic_get_option(HangulInputContext* hic, int option)
@@ -1355,6 +1628,27 @@ hangul_ic_get_option(HangulInputContext* hic, int option)
  *        MS IME와 호환을 위해서 사용.
  *        예) true면 ㄱ+ㅅ -> ㄳ 으로 조합시켜 줌.
  * @param value 설정하고자 하는 값, true 또는 false
+ *
+ * English By google Translate
+ * @brief @ref Function to set the combination option of HangulInputContext
+ * @param hic @ref Pointer to HangulInputContext
+ * @param option @ref HangulInputContext combination processing option.
+ * The following options are available.
+ * - HANGUL_IC_OPTION_AUTO_REORDER
+ * - Automatic order correction option. You have to turn it on to collect.
+ * Ex) If true, a+a -> completes with .
+ * - HANGUL_IC_OPTION_COMBI_ON_DOUBLE_STROKE
+ * - Option to combine the sound with consonant strokes on the double-barreled keyboard.
+ * The original keyboard operates with consecutive consonant strokes such as three-beol-sik or old Hangul
+ * The option does not work on the keyboard.
+ * Used for compatibility with MS IME.
+ * Ex) If true, it is combined with ㄱ+a -> ㄲ.
+ * - HANGUL_IC_OPTION_NON_CHOSEONG_COMBI
+ * - Option to allow the combination of double consonants without the initial consonant on the dual-type keyboard.
+ * Options do not work except for the duo-type keyboard.
+ * Used for compatibility with MS IME.
+ * Ex) If true, it is combined with ㄱ+ㅅ -> ㄳ.
+ * @param value The value to set, true or false
  */
 void
 hangul_ic_set_option(HangulInputContext* hic, int option, bool value)
@@ -1450,6 +1744,28 @@ hangul_ic_set_keyboard(HangulInputContext *hic, const HangulKeyboard* keyboard)
  * 
  * @remarks 이 함수는 @ref HangulInputContext 의 내부 조합 상태에는 영향을
  * 미치지 않는다.  따라서 입력 중간에 자판을 변경하더라도 조합 상태는 유지된다.
+ *
+ *EbGT
+ * @brief @ref Function to change keyboard layout of HangulInputContext
+ * @param hic @ref HangulInputContext object
+ * @param id You can select the keyboard you want to select and the values ​​below.
+ * @li "2" @ref layout_2 keyboard
+ * @li "2y" @ref layout_2y keyboard
+ * @li "3f" @ref layout_3f keyboard
+ * @li "39" @ref layout_390 keyboard
+ * @li "3s" @ref layout_3s keyboard
+ * @li "3y" @ref layout_3y keyboard
+ * @li "32" @ref layout_32 keyboard
+ * @li "ro" @ref layout_ro keyboard
+ *
+ * For information on keyboards supported by libhangul, see the @ref hangulkeyboards page.
+ * see
+ * no @return
+ *
+ * This function changes the keyboard of @ref HangulInputContext to the one specified by @a id.
+ *
+ * @remarks This function does not affect the internal composition state of @ref HangulInputContext.
+ * Does not reach Therefore, even if the keyboard is changed in the middle of input, the combination state is maintained.
  */
 void
 hangul_ic_select_keyboard(HangulInputContext *hic, const char* id)
@@ -1483,6 +1799,17 @@ hangul_ic_set_combination(HangulInputContext *hic,
  * 생성한다. 생성할때 지정한 자판은 나중에 hangul_ic_select_keyboard() 함수로
  * 다른 자판으로 변경이 가능하다.
  * 더이상 사용하지 않을 때에는 hangul_ic_delete() 함수로 삭제해야 한다.
+ * 
+ * EbGT
+ * @brief @ref Create a HangulInputContext object.
+ * @param keyboard For the keyboard you want to use and the available values,
+ * Refer to hangul_ic_select_keyboard() function description.
+ * @return pointer to the newly created @ref HangulInputContext
+ *
+ * This function uses the @ref HangulInputContext object that provides the Hangul combination function.
+ * create The keyboard specified when creating is later used with the hangul_ic_select_keyboard() function.
+ * It is possible to change to another keyboard.
+ * When not used anymore, it must be deleted with hangul_ic_delete() function.
  */
 HangulInputContext*
 hangul_ic_new(const char* keyboard)
@@ -1527,6 +1854,16 @@ hangul_ic_new(const char* keyboard)
  * 이 함수로 메모리해제를 해야 한다.
  * 메모리 해제 과정에서 상태 변화는 일어나지 않으므로 마지막 입력된 
  * 조합중이던 내용은 사라지게 된다.
+ *
+ * EbGT
+ * @brief @ref Function to delete HangulInputContext
+ * @param hic @ref HangulInputContext object
+ *
+ * Release the memory of the @ref HangulInputContext object pointed to by @a hic.
+ * All @ref HangulInputContext objects created with hangul_ic_new() function
+ * Memory must be freed with this function.
+ * As the state does not change during the memory release process, the last input
+ * The content being combined will disappear.
  */
 void
 hangul_ic_delete(HangulInputContext *hic)
@@ -1538,6 +1875,7 @@ hangul_ic_delete(HangulInputContext *hic)
 }
 
 /** @deprecated 이 함수 대신 @ref hangul_keyboard_list_get_count 를 사용하라 */
+/** @deprecated Use @ref hangul_keyboard_list_get_count instead of this function */
 unsigned int
 hangul_ic_get_n_keyboards()
 {
@@ -1545,6 +1883,7 @@ hangul_ic_get_n_keyboards()
 }
 
 /** @deprecated 이 함수 대신 @ref hangul_keyboard_list_get_keyboard_id 를 사용하라 */
+/** @deprecated Use @ref hangul_keyboard_list_get_keyboard_id instead of this function */
 const char*
 hangul_ic_get_keyboard_id(unsigned index_)
 {
@@ -1552,6 +1891,7 @@ hangul_ic_get_keyboard_id(unsigned index_)
 }
 
 /** @deprecated 이 함수 대신 @ref hangul_keyboard_list_get_keyboard_name 을 사용하라 */
+/** @deprecated Use @ref hangul_keyboard_list_get_keyboard_name instead of this function */
 const char*
 hangul_ic_get_keyboard_name(unsigned index_)
 {
@@ -1569,6 +1909,17 @@ hangul_ic_get_keyboard_name(unsigned index_)
  * 키보드 자판 배열에 독립적인 값으로 변환한 후 넘겨야 한다.
  * 그렇지 않으면 유럽어 자판과 한국어 자판을 같이 쓸때 한글 입력이 제대로
  * 되지 않는다.
+ * 
+ * English By Google Translate
+ * @brief Determine if a given hic is a transliteration method
+ * @param hic pointer to HangulInputContext to know state
+ * @return Returns true if hic is a transliteration method, false otherwise
+ *
+ * This function determines whether @a hic is a transliteration method.
+ * If this function returns false, before passing the keycode to the process function
+ * After converting to a value independent of the keyboard layout, pass it.
+ * Otherwise, when using a European keyboard and a Korean keyboard together, the Korean input will not work properly.
+ * It doesn't work.
  */
 bool
 hangul_ic_is_transliteration(HangulInputContext *hic)
@@ -1590,6 +1941,11 @@ hangul_ic_is_transliteration(HangulInputContext *hic)
  * @breif libhangul을 초기화 하는 함수.
  *
  * libhangul의 함수를 사용하기 전에 호출해야 한다.
+ *
+ * EbGT
+ * @breif Function to initialize libhangul.
+ *
+ * It must be called before using the function of libhangul.
  */
 int
 hangul_init()
@@ -1604,6 +1960,11 @@ hangul_init()
  * @breif libhangul에서 사용한 리소스를 해제하는 함수.
  *
  * libhangul의 함수의 사용이 끝나면 호출해야 한다.
+ * 
+ * EbGT
+ * @breif Function to release resources used by libhangul.
+ *
+ * It should be called when the function of libhangul is used.
  */
 int
 hangul_fini()
