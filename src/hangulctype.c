@@ -39,6 +39,13 @@
  * libhangul은 한글 각 글자를 구분하고 조작하는데 사용할 수 있는 몇가지 함수를
  * 제공한다.  libhangul의 글자 구분 함수의 인터페이스에서 글자의 기본 단위는
  * UCS4 코드값이다.
+ * English by Google Translate:
+ * @defgroup hangulctype Hangul character manipulation
+ *
+ * @section hangulctype Hangul character manipulation
+ * libhangul has several functions that can be used to distinguish and manipulate each character in Hangul.
+ * to provide. In the interface of libhangul's character separation function, the basic unit of character is
+ * UCS4 code value
  */
 
 /**
@@ -55,6 +62,14 @@
  * 이 스트링은  C 스트링과 유사하게 0으로 끝난다.
  * 유니코드 값이 한글의 어떤 범주에 속하는지 확인하는 함수도 모두 ucschar 형을
  * 사용한다.
+ * Enlgish By Google Translate:
+ * @brief character code value in UCS4 code unit
+ *
+ * Stores the UCS4 code value. This is the basic unit of string used in libhangul.
+ * Both the preedit string and the commit string are passed as ucschar pointer type.
+ * This string is 0-terminated, similar to a C string.
+ * All functions that check whether a Unicode value belongs to any category of Hangul are of type ucschar.
+ * use.
  */
 
 static const ucschar syllable_base  = 0xac00;
@@ -72,6 +87,14 @@ static const int njongseong = 28;
  * 
  * @a c 로 주어진 UCS4 코드가 초성인지 확인한다.
  * Unicode 5.2 지원
+ * English By Google Translate
+ * @brief function to check if it is the initial consonant
+ * @param c UCS4 code value
+ * @return @a Returns true if c corresponds to the initial consonant, false otherwise
+ *
+ * Check if the UCS4 code given by @a c is the leading consonant.
+ * Unicode 5.2 support
+
  */
 bool
 hangul_is_choseong(ucschar c)
@@ -89,6 +112,13 @@ hangul_is_choseong(ucschar c)
  * 
  * @a c 로 주어진 UCS4 코드가 중성인지 확인한다.
  * Unicode 5.2 지원
+ * English By Google Translate
+ * @brief function to check if neutral
+ * @param c UCS4 code value
+ * @return @a Returns true if c is neutral, false otherwise
+ *
+ * Check if the UCS4 code given by @a c is neutral.
+ * Unicode 5.2 support
  */
 bool
 hangul_is_jungseong(ucschar c)
@@ -105,6 +135,15 @@ hangul_is_jungseong(ucschar c)
  * 
  * @a c 로 주어진 UCS4 코드가 종성인지 확인한다.
  * Unicode 5.2 지원
+ *
+ * English By Google Translate
+ *
+ * @brief function to check if it is final
+ * @param c UCS4 code value
+ * @return @a Returns true if c matches the finality, false otherwise
+ *
+ * Checks whether the UCS4 code given by @a c is final.
+ * Unicode 5.2 support
  */
 bool
 hangul_is_jongseong(ucschar c)
@@ -125,6 +164,8 @@ hangul_is_combining_mark(ucschar c)
 /**
  * @ingroup hangulctype
  * @brief 초성이고 조합 가능한지 확인
+ * English By Google Translate
+ * @brief Check if it is the initial sound and can be combined
  */
 bool
 hangul_is_choseong_conjoinable(ucschar c)
@@ -135,6 +176,9 @@ hangul_is_choseong_conjoinable(ucschar c)
 /**
  * @ingroup hangulctype
  * @brief 중성이고 조합 가능한지 확인
+ *
+ * English By Google Translate:
+ * @breif Make sure it is neutral and combinable
  */
 bool
 hangul_is_jungseong_conjoinable(ucschar c)
@@ -145,6 +189,9 @@ hangul_is_jungseong_conjoinable(ucschar c)
 /**
  * @ingroup hangulctype
  * @brief 종성이고 조합 가능한지 확인
+ *
+ *EbGT
+ * @breif Check if final and combinable
  */
 bool
 hangul_is_jongseong_conjoinable(ucschar c)
@@ -155,6 +202,9 @@ hangul_is_jongseong_conjoinable(ucschar c)
 /**
  * @ingroup hangulctype
  * @brief 자모가 조합 가능한지 확인
+ *
+ *EbGT
+ * @brief Check if letters can be combined
  */
 bool
 hangul_is_jamo_conjoinable(ucschar c)
@@ -172,6 +222,14 @@ hangul_is_jamo_conjoinable(ucschar c)
  *
  * 이 함수는 @a c로 주어진 UCS4 코드가 현대 한글 음절에 해당하는지
  * 확인한다.
+ *
+ * EbGT
+ * @brief Check if it is a Korean syllable
+ * @param c UCS4 code value
+ * @return @a true if c is a Korean syllable code, false otherwise
+ *
+ * This function checks whether the UCS4 code given by @a c corresponds to a modern Korean syllable.
+ * Check.
  */
 bool
 hangul_is_syllable(ucschar c)
@@ -187,6 +245,14 @@ hangul_is_syllable(ucschar c)
  *
  * @a c 로 주어진 UCS4 코드가 자모 코드인지 확인한다.
  * Unicode 5.2 지원
+ *
+ * EbGT
+ * @brief check if it is a letter
+ * @param c UCS4 code value
+ * @return @a Returns true if c is a letter code, false otherwise
+ *
+ * Check whether the UCS4 code given by @a c is a Jamo code.
+ * Unicode 5.2 support
  */
 bool
 hangul_is_jamo(ucschar c)
@@ -203,6 +269,13 @@ hangul_is_jamo(ucschar c)
  * @return @a c가 호환자모이면 true, 그 외에는 false
  *
  * 이 함수는 @a c로 주어진 UCS4 코드가 호환 자모인지 확인한다.
+ *
+ *EbGT
+ * Check if it is @brief compatible alphabet
+ * @param c UCS4 code value
+ * @return @a true if c is compatible, false otherwise
+ *
+ * This function checks whether the UCS4 code given by @a c is a compatible alphabet.
  */
 bool
 hangul_is_cjamo(ucschar c)
@@ -219,6 +292,15 @@ hangul_is_cjamo(ucschar c)
  * 이 함수는 @a c 로 주어진 자모 코드와 같은 형태를 가진 호환 자모 값을
  * 리턴한다.  자모와 같은 형태를 가진 호환 자모가 없는 경우에는 @a c 의 
  * 값을 그대로 리턴한다.
+ *
+ * EbGT
+ * Converts @brief Jamo codes to their compatible Jamo counterparts
+ * @param c UCS4 code value to convert
+ * @return @a c corresponding to a compatible alphabetic value, or c
+ *
+ * This function returns a compatible Jamo value with the same shape as the Jamo code given by @a c .
+ * returns @a c if there is no compatible alphabet with the same form as the
+ * Returns the value as it is.
  */
 ucschar
 hangul_jamo_to_cjamo(ucschar c)
@@ -1289,6 +1371,19 @@ hangul_jongseong_get_diff(ucschar prevjong, ucschar jong)
  * 초성, 중성, 종성으로 하는 현대 한글 음절 코드를 구한다.
  * @a choseong @a jungseong @a jongseong 이 조합 가능한 코드가 아니라면 
  * 0을 리턴한다. 종성이 없는 글자를 만들기 위해서는 jongseong에 0을 주면 된다.
+ *
+ *English by Google Translate
+ * @brief Converts to Hangul syllables by combining Jamo codes
+ * @param choseong UCS4 chord value to be the initial consonant
+ * @param jungseong UCS4 code value to be neutral
+ * @param jongseong UCS4 code value to be Jongseong
+ * Modern Hangul syllable code combining @return @a choseong @a jungseong @a jongseong,
+ * or 0
+ *
+ * This function converts the code values given by @a choseong @a jungseong @a jongseong respectively.
+ * Find the modern Hangeul syllable codes with the initial, middle, and final consonants.
+ * @a choseong @a jungseong @a jongseong If this is not a combinable code
+ * returns 0. If you want to make a letter without a jongseong, you can add 0 to jongseong.
  */
 ucschar
 hangul_jamo_to_syllable(ucschar choseong, ucschar jungseong, ucschar jongseong)
@@ -1327,6 +1422,18 @@ hangul_jamo_to_syllable(ucschar choseong, ucschar jungseong, ucschar jongseong)
  * 이 함수는 @a syllable 로 주어진 음절 코드를 분해하여 자모 코드를 반환한다.
  * 반환하는 값은 @a choseong, @a jungseong, @a jongseong 의 포인터에 대입하여
  * 리턴한다. 종성이 없는 음절인 경우에는 @a jongseong 에 0을 반환한다.
+ *
+ * EbGT
+ * @brief breaks syllables into letters
+ * @param syllable
+ * @retval choseong Chord of the leading part of the syllable
+ * @retval jungseong Chord of the neutral part of the syllable
+ * @retval jongseong The code of the last part of a syllable, if there is no final part, 0 is returned.
+ * no @return
+ *
+ * This function decomposes the syllable code given by @a syllable and returns the syllable code.
+ * The returned value is assigned to the pointers of @a choseong, @a jungseong, and @a jongseong.
+ * returns In the case of a syllable without a final ending, 0 is returned to @a jongseong.
  */
 void
 hangul_syllable_to_jamo(ucschar syllable,
@@ -1361,7 +1468,7 @@ hangul_syllable_to_jamo(ucschar syllable,
     }
 }
 
-/** @deprecated 이 함수 대신 hangul_syllable_to_jamo함수를 사용한다. */
+/** @deprecated 이 함수 대신 hangul_syllable_to_jamo함수를 사용한다. EbGT Use hangul_syllable_to_jamo function instead of this function.*/
 void
 hangul_syllable_to_jaso(ucschar syllable,
       ucschar* choseong,
@@ -1582,6 +1689,30 @@ build_syllable(const ucschar* str, size_t len)
  * @a str 이 자모 코드에 해당하지 않는 경우에는 1을 반환한다.
  *
  * 이 함수는 자모 스트링에서 총 음절의 갯수를 구하는 함수가 아님에 주의한다.
+ *EbGT
+ * @brief Function to find the number of chords corresponding to one syllable
+ * @param str The string to find the length of the syllable
+ * @param max_len @a str is the length limit to read from.
+ * @return Number of chords per syllable
+ *
+ * This function counts the number of chords corresponding to one syllable in @a str.
+ * If the number of chords corresponding to one syllable is greater than @a max_len, use @a max_len
+ * return The criterion for judging one syllable is according to the L*V*T+ pattern. this pattern is
+ * Following the convention of regular expression, 1 or more initial and neutral, 0
+ * This means that the letter string with the last consonants of the above is recognized as one syllable. For example
+ * The following Jamo strings are also recognized as one syllable.
+ *
+ * Ex) "f ㅜ ㅔ ㄹ ㄱ" -> "Queen"
+ *
+ * Therefore, in the above case, 6 is returned.
+ *
+ * In general, the dot (U+302E, U+302F) will be recognized as one syllable, but this function
+ * This is implemented to make conversion between syllables and Jamo convenient, and the emphasis is on other syllables.
+ * Recognize
+ *
+ * Returns 1 if @a str does not correspond to a letter code.
+ *
+ * Note that this function is not a function that calculates the total number of syllables in a character string.
  */
 int
 hangul_syllable_len(const ucschar* str, int max_len)
@@ -1616,6 +1747,18 @@ hangul_syllable_len(const ucschar* str, int max_len)
  * 앞쪽으로 이동하지 않는다. 
  *
  * 한 음절이라고 판단하는 기준은 L*V*T+M? 패턴에 따른다.
+ *
+ *EbGT
+ * Function to get a pointer to the first letter of the previous syllable based on @brief @a iter
+ * @param iter current position
+ * @param begin The starting position of the string, the limit to which the pointer moves
+ * @return pointer to the first letter of the previous syllable
+ *
+ * This function determines the previous syllable based on the pointer of the Jamo string given by @a iter.
+ * Returns a pointer to the first character. Rather than begin to find a syllable
+ * Do not move forward.
+ *
+ * The criterion for judging a syllable is L*V*T+M? Follow the pattern.
  */
 const ucschar*
 hangul_syllable_iterator_prev(const ucschar* iter, const ucschar* begin)
@@ -1646,6 +1789,17 @@ hangul_syllable_iterator_prev(const ucschar* iter, const ucschar* begin)
  * 이동하지 않는다. 
  *
  * 한 음절이라고 판단하는 기준은 L*V*T+M? 패턴에 따른다.
+ * English by Google Translate
+ * Function to get a pointer to the first letter of the next syllable based on @brief @a iter
+ * @param iter current position
+ * @param end The end position of the string, the limit value to which the pointer moves
+ * @return pointer to the first letter of the next syllable
+ *
+ * This function calculates the next syllable based on the pointer of the Jamo string given by @a iter.
+ * Returns a pointer to the first character. Cross the end to find a syllable
+ * Do not move.
+ *
+ * The criterion for judging a syllable is L*V*T+M? Follow the pattern.
  */
 const ucschar*
 hangul_syllable_iterator_next(const ucschar* iter, const ucschar* end)
@@ -1683,6 +1837,30 @@ hangul_syllable_iterator_next(const ucschar* iter, const ucschar* end)
  * 않는다.  @a srclen 이 -1이라면 @a src 는 0으로 끝나는 스트링으로 가정하고
  * 0을 제외한 길이까지 변환을 시도한다. 따라서 변환된 결과 스트링은 0으로 
  * 끝나지 않는다. 만일 0으로 끝나는 스트링을 만들고 싶다면 다음과 같이 한다.
+ *
+ * @code
+ * int n = hangul_jamos_to_syllables(dest, destlen, src, srclen);
+ * dest[n] = 0;
+ * @endcode
+ *
+ *EbGT
+ * @brief converts a string to a syllable
+ * @param dest Buffer to store the result converted to syllable type
+ * @param destlen The length of the buffer to store the result in (ucschar code units).
+ * @param src Character string to convert
+ * @param srclen Length of character string to be converted (ucschar code unit)
+ * @return @a number of codes stored in destlen
+ *
+ * This function is L+V+T*M? Attempts to convert a character string according to the pattern. one syllable
+ * Refer to @ref hangul_syllable_len for the criteria for judging.
+ * If @a src cannot be converted to an appropriate syllable form, the
+ * Copied as is.
+ *
+ * This function converts the letter string @a src into a syllable type and stores it in @a dest .
+ * Read the number specified in @a srclen and write more than the length specified in @a destlen
+ * don't If @a srclen is -1, @a src is assumed to be a zero-terminated string
+ * Attempts to convert to a length excluding 0. Therefore, the converted result string is 0
+ * It doesn't end. If you want to create a zero-terminated string:
  *
  * @code
  * int n = hangul_jamos_to_syllables(dest, destlen, src, srclen);
