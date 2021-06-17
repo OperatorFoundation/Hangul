@@ -1377,8 +1377,7 @@ hangul_jongseong_get_diff(ucschar prevjong, ucschar jong)
  * @param choseong UCS4 chord value to be the initial consonant
  * @param jungseong UCS4 code value to be neutral
  * @param jongseong UCS4 code value to be Jongseong
- * Modern Hangul syllable code combining @return @a choseong @a jungseong @a jongseong,
- * or 0
+ * @return @a choseong @a jungseong A modern Korean syllable code combination @a jongseong, or 0
  *
  * This function converts the code values given by @a choseong @a jungseong @a jongseong respectively.
  * Find the modern Hangeul syllable codes with the initial, middle, and final consonants.
@@ -1405,7 +1404,7 @@ hangul_jamo_to_syllable(ucschar choseong, ucschar jungseong, ucschar jongseong)
     jungseong -= jungseong_base;
     jongseong -= jongseong_base;
 
-    c = ((choseong * njungseong) + jungseong) * njongseong + jongseong
+    c = ((choseong * njungseong) + jungseong) * njongseong + jongseong /** (Scully): finding the sylable code using a formula like the Unicode lookup:[(initial) × 588 + (medial) × 28 + (final)] + 44032. **/
   + syllable_base;
     return c;
 }
@@ -1859,7 +1858,7 @@ hangul_syllable_iterator_next(const ucschar* iter, const ucschar* end)
  * This function converts the letter string @a src into a syllable type and stores it in @a dest .
  * Read the number specified in @a srclen and write more than the length specified in @a destlen
  * don't If @a srclen is -1, @a src is assumed to be a zero-terminated string
- * Attempts to convert to a length excluding 0. Therefore, the converted result string is 0
+ * Attempts to convert to a length excluding 0. Therefore, {if} the converted result string is 0
  * It doesn't end. If you want to create a zero-terminated string:
  *
  * @code
