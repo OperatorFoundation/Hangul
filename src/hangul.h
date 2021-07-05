@@ -169,8 +169,10 @@ const char*  hanja_get_value(const Hanja* hanja);
 const char*  hanja_get_comment(const Hanja* hanja);
 
 // Begin Arduino compatibility
-char *ucschar_to_char(const ucschar *ucs);
-int ucscharlen(const ucschar *str);
+unsigned unicode_codepoint_to_utf8(uint8_t *utf8, uint32_t codepoint);
+bool handle_spaces(char keypress);
+bool get_arduino_char(HangulInputContext *hic, char keystroke, char *output);
+
 // End Arduino compatibility
 
 #ifdef __cplusplus
