@@ -1913,42 +1913,124 @@ hangul_jamos_to_syllables(ucschar* dest, int destlen, const ucschar* src, int sr
 }
 
 // Begin Arduino compatibility
-int ucscharlen(const ucschar *str)
-{
-    const ucschar *end = str;
-    while (*end != 0)
-        end++;
-    return end - str;
+
+unsigned unicode_codepoint_to_utf8(uint8_t *utf8, uint32_t codepoint) {
+  /*Function Unicode_CodepointToUTF8()
+   * a function which converts from an int unicode codepoint to a utf8 int. 
+   * for each number of used bits, 0-4, it does bitwise math to get just the relevant parts of the codepoint 
+   *    
+   * ++++++++++
+   * Parameters
+   * *utf8 : a pointer to the utf variable that this function fills with the properly formatted output. 
+   * codepoint : a decimal representation of a unicode codepoint. U+AC00 would take 44032 or 0xAC00
+   * ++++++++++
+   * Returns
+   * len (int): the number of BYTES used by the utf8 encoding NOTE: 4 BYTES WILL BE USED, 0 FILLED WHEN NOT USED BY UTF8 ENCODING. 
+   * utf8(uint8_t): the function fills utf8 with the hex utf-8 ecoding that coordinates to the apropriate Unicode Datapoint.
+   * ++++++++++
+   * Notes: 
+   * 0xc0 is is the leading code for any two octet block, 
+   * 0xe0 is the leading code denoting a three octet block,  
+   * 0xf0 is the leading code denoting a four octet block  
+   * 0x80 is is the leading code for any subsequent of multi-octet blocks 
+   */
+  int secondplacedigit = 6; //slides the bits left, chucking away the bottom digit. 
+  int thirdplacedigit = 12; //slides the bits left, chucking away the bottom 2 digits 
+  int fourthplacedigit = 18; //slides the bits left, chucking away the bottom 3 digits
+  int mask = 0x3F; //binary 111111, returns 1 for any 1 in the first 6 ranks, but 0 for everything after. (because 111111 is equal to 0000111111, so any digits bigger than it get eaten by its implied 0s)
+  
+  if (codepoint <= 0x7F) {//if the codepoint is smaller than 128, it onl8xy needs 1 BYTE
+    utf8[0] = codepoint;
+    return 1;
+  }//is x1100->11ff below this?!?! when given codepoint 1100, it thingks its in 2 lenght, but its in 3
+  if (codepoint <= 0x7FF) {//if the codepoint is smaller than 2078, it only needs 2 BYTE
+    utf8[0] = 0xC0 /*removes the 2 octet-lenght character boundary*/| (codepoint >> secondplacedigit); //first byte is 0xC0 |ored against second place digit
+    utf8[1] = 0x80 /*binary 10000000 */| (codepoint & mask/*binary 111111*/);
+    return 2;
+  }
+  if (codepoint <= 0xFFFF) {
+    if (codepoint >= 0xD800 && codepoint <= 0xDFFF) {
+      return 0; //these code blocks are reserved for UTF-16 data. 
+    }
+    utf8[0] = 0xE0 /*removes the 3 octet-lenght character boundary*/ | (codepoint >> thirdplacedigit);
+    utf8[1] = 0x80 /*binary 10000000 */| ((codepoint >> secondplacedigit) & mask/*binary 111111*/);
+    utf8[2] = 0x80 /*binary 10000000 */| (codepoint & mask/*binary 111111*/);
+    return 3;
+  }
+  if (codepoint <= 0x10FFFF) {
+    utf8[0] = 0xF0 /*removes the 4 octet-lenght character boundary*/| (codepoint >> fourthplacedigit);
+    utf8[1] = 0x80 /*removes the octet start marker from each following octet*/| ((codepoint >> thirdplacedigit) & mask/*binary 111111*/);
+    utf8[2] = 0x80 /*binary 10000000 removes the octet start marker from each following octet*/| ((codepoint >> secondplacedigit) & mask/*binary 111111*/);
+    utf8[3] = 0x80 /*binary 10000000 removes the octet start marker from each following octet*/| (codepoint & mask/*binary 111111*/);
+    return 4;
+  }
+  return 0;
 }
 
-char *ucschar_to_char(const ucschar *ucs)
+bool handle_spaces(char keypress)
 {
-    int len = ucscharlen(ucs);
-
-    wchar_t *wcs = (wchar_t *)malloc(sizeof(wchar_t) * len);
-    char *cs = (char *)malloc(sizeof(char) * len);
-
-    // FIXME: Is this correct?
-    for (int x=0; x < len; x++)
-    {
-        wcs[x] = ucs[x];
-    }
-
-    /* load native locale */
-    if (setlocale(LC_ALL, "") == NULL)
-    {
-        return NULL;
-    }
-
-    /* check if charset is UTF-8 */
-    if (strcasecmp(nl_langinfo(CODESET), "UTF-8"))
-    {
-        return NULL;
-    }
-
-    snprintf(cs, len, "%ld", cs);
-
-    return cs;
+/*A function to check if the keypress is a space and pass them to the renderer(because libhangul's space handler is hiding)
+ * ++++++++++
+ * Paramaters
+ * keypress: character being keyed in. 
+ * ++++++
+ * Return true if space, false if not
+ */
+  
+  if (keypress == ' ')
+  { 
+    return true;
+  }
+  else
+  {
+    return false;
+  }
 }
+
+
+bool get_arduino_char(HangulInputContext *hic, char keystroke, char *output)
+/* Function get_arduino_char passes a keystroke through the hic, and converts the ucschar produced by
+ * the hic into a char built from a uint8_t[4] filled by utf8 encoded values that are equivalent to the ucschar
+ * it transforms that into a char and passes it back out, and returns whether or not the hic thinks this is a final character
+ * ++++++++++
+ * Parameters 
+ * *hic, pointer to the HangulInputContext
+ * keystroke, the keystroke we are converting to hangul
+ * *output, pointer to the utf8 encoded hangul character the function produces. 
+ * ++++++++++
+ * RETURNS
+ * True or False, True if the character is a final form of a hangul or False if a building block for temporary display. 
+ * *output, passed in as an output parameter, now filled with a character. 
+ */
+{
+  int ret = hangul_ic_process(hic, keystroke);//handles backspaces and keyboards
+  uint8_t utf8[4]={0,0,0,0};
+  uint8_t pre_edit[4] = {0,0,0,0};
+  char* single;
+  int ascii;
+
+  const ucschar *commit_string = hangul_ic_get_commit_string(hic); //get the preedit strings by passing characters (simulating keystrokes into the get_string functions
+  if (*commit_string == 0)
+  {
+    const ucschar *preedit_string = hangul_ic_get_preedit_string(hic);
+    unsigned len2 = unicode_codepoint_to_utf8(pre_edit, *preedit_string);
+    single = ((char *)pre_edit);
+    memcpy(output, single, 32);
+    return false;
+    }
+  else
+  {
+    unsigned len = unicode_codepoint_to_utf8(utf8, *commit_string);//convert the uschars to utf8 ecoded uint8_t[4] arrays. 
+    single = (char *)utf8;
+    
+       
+    memcpy(output, single, 32);
+    return true;
+    
+    }
+
+    hangul_ic_reset(hic);
+    hangul_ic_delete(hic);
+ }
 
 // End Arduino compatibility
