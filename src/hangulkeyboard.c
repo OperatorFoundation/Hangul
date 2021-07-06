@@ -55,6 +55,20 @@
  * 인식하는 방식이므로 동일한 id를 가진 자판을 등록하면 먼저 등록된 자판만
  * 인식되므로 주의가 필요하다. 다시 말해서 시스템 자판과 같은 id를 가진
  * 자판은 등록하여 사용할 수 없다.
+ * Eglish by Google Translate (EbGT)
+ * @section addinghangulkeyboards How to add Hangul keyboard
+ * There are two places where libhangul reads the Hangul keyboard file.
+ * - Files installed in the @$(pkgdatadir)/keyboards directory are
+ * Recognize
+ * - @$HOME/.local/share/libhangul/keyboards or @$XDG_DATA_HOME/libhangul/keyboards
+ * Files installed in the directory are recognized only by individual users.
+ *
+ * The loading order of the keyboard file is to load the system file first, then the user file.
+ * Load. Therefore, if you iterate over the Korean keyboard list, the user added keyboard is
+ * Comes out at the end. The keyboard where the user keyboard selection algorithm first appeared
+ * Since it is a recognition method, if you register a keyboard with the same id, only the keyboard registered first
+ * It is recognized, so you need to be careful. In other words, with the same id as the system keyboard
+ * The keyboard cannot be registered and used.
  */
 
 #define LIBHANGUL_KEYBOARD_DIR LIBHANGUL_DATA_DIR "/keyboards"
@@ -307,6 +321,7 @@ hangul_combination_add_item(HangulCombination* combination,
   size_t size_need = combination->size_alloced * 2;
   if (size_need == 0) {
       // 처음 할당할 때에는 64개를 기본값으로 한다.
+      // When first allocating, the default value is 64.
       size_need = 64;
   }
 
@@ -335,6 +350,8 @@ hangul_combination_cmp(const void* p1, const void* p2)
 
     /* key는 unsigned int이므로 단순히 빼서 리턴하면 안된다.
      * 두 수의 차가 큰 경우 int로 변환하면서 음수가 될 수 있다. */
+    /* Since key is an unsigned int, it should not be returned by simply subtracting it.
+     * If the difference between two numbers is large, it can be negative while converting to int. */
     if (item1->key < item2->key)
   return -1;
     else if (item1->key > item2->key)
@@ -839,19 +856,27 @@ hangul_keyboard_list_init()
     /* 이 함수를 중복 호출할 경우에 대한 처리
      * 이미 등록된 자판이 있다면 중복 호출된 것으로 보고
      * 함수를 종료한다. */
+    /* Handling when this function is called repeatedly
+     * If there is already a registered keyboard, it is reported as a duplicate call.
+     * Terminate the function. */
     if (hangul_keyboards.n > 0)
   return 2;
 
     /* hangul_init을 호출하면 builtin keyboard는 disable되도록 처리한다.
      * 기본 자판은 외부 파일로 부터 로딩하는 것이 기본 동작이고
      * builtin 키보드는 하위 호환을 위해 남겨둔다. */
+    /* When hangul_init is called, the builtin keyboard is disabled.
+     * The default operation is to load the keyboard from an external file.
+     * The builtin keyboard is reserved for backwards compatibility. */
     hangul_builtin_keyboard_count = 0;
 
     unsigned n = 0;
     /* libhangul data dir에서 keyboard 로딩 */
+    /* Load keyboard from libhangul data dir */
     n += hangul_keyboard_list_load_dir(LIBHANGUL_KEYBOARD_DIR);
 
     /* 유저의 개별 키보드 파일 로딩 */
+    /* Load user's individual keyboard file */
     char* user_data_dir = NULL;
     char* xdg_data_home = getenv("XDG_DATA_HOME");
     if (xdg_data_home == NULL) {
@@ -947,6 +972,13 @@ hangul_builtin_keyboard_list_get_keyboard(const char* id)
  * 이 함수의 리턴값을 이용해서 자판을 iteration할 수 있다.
  * 한글 자판의 설치 위치에 대한 정보는 @ref addinghangulkeyboards 를 참고하라.
  * @return @ref HangulInputContext 에서 선택 가능한 자판 개수
+ *
+ *EbGT
+ * Function to get the number of keyboards provided by @brief libhangul
+ *
+ * You can iterate the keyboard using the return value of this function.
+ * Refer to @ref addinghangulkeyboards for information on the installation location of the Korean keyboard.
+ * @return @ref Number of keyboards that can be selected in HangulInputContext
  */
 unsigned int
 hangul_keyboard_list_get_count()
@@ -965,6 +997,14 @@ hangul_keyboard_list_get_count()
  * hangul_ic_select_keyboard() 함수의 인자로 사용하는 문자열이다.
  * @return 지정된 자판의 id. 이 문자열은 libhangul 내부에서 관리하는 것으로
  *         free해서는 안된다.
+ *
+ *EbGT
+ * Function to get the id of the keyboard provided by @brief libhangul
+ *
+ * Returns the id value of the keyboard specified by @a index_. This id is @ref
+ * A string used as an argument of the hangul_ic_select_keyboard() function.
+ * @return The id of the specified keyboard. This string is managed inside libhangul.
+ * Should not be free.
  */
 const char*
 hangul_keyboard_list_get_keyboard_id(unsigned index_)
@@ -991,6 +1031,13 @@ hangul_keyboard_list_get_keyboard_id(unsigned index_)
  * 위한 것으로, 번역되어 사람이 읽을 수 있는 형태의 문자열이다.
  * @return 지정된 자판의 이름. 이 문자열은 libhangul 내부에서 관리하는 것으로
  *         free해서는 안된다.
+ * EbGT
+ * Function to get the name of the keyboard provided by @brief libhangul
+ *
+ * Returns the name of the keyboard specified by @a index_. Show this string to the user
+ * For this purpose, it is a human-readable string that has been translated.
+ * @return The name of the specified keyboard. This string is managed inside libhangul.
+ * Should not be free.
  */
 const char*
 hangul_keyboard_list_get_keyboard_name(unsigned index_)
@@ -1014,6 +1061,11 @@ hangul_keyboard_list_get_keyboard_name(unsigned index_)
  * @brief libhangul에서 제공하는 자판의 HangulKeyboard 포인터를 구하는 함수
  * @return id로 찾아진 자판의 HangulKeyboard 포인터, 못찾으면 NULL.
  *         이 스트럭처는 libhangul 내부에서 관리하는 것으로 free해서는 안된다.
+ *
+ *EbGT
+ * Function to get HangulKeyboard pointer of keyboard provided by @brief libhangul
+ * @return The HangulKeyboard pointer of the keyboard found by id, NULL if not found.
+ * This structure is managed inside libhangul and should not be freed.
  */
 const HangulKeyboard*
 hangul_keyboard_list_get_keyboard(const char* id)
@@ -1024,6 +1076,8 @@ hangul_keyboard_list_get_keyboard(const char* id)
 
     /* 키보드 목록에서 순차 검색을 하여 찾으므로 같은 id로 서로다른
      * 자판이 등록되어 있다고 하면 먼저 로딩된 자판만 인식된다. */
+    /* It is found by sequential search in the keyboard list, so different
+     * If the keyboard is registered, only the first loaded keyboard is recognized. */
     size_t i;
     for (i = 0; i < hangul_keyboards.n; ++i) {
   HangulKeyboard* keyboard = hangul_keyboards.keyboards[i];
@@ -1067,6 +1121,15 @@ hangul_keyboard_list_append(HangulKeyboard* keyboard)
  * 여기에 등록된 키보드는 hangul_ic_select()를 통해서 선택될 수 있게 된다.
  * 이후 @a keyboard 는 libhangul이 관리하므로 사용자가 임의로 삭제해서는 안된다.
  * hangul_fini() 함수 안에서 삭제될 것이다.
+ *
+ * EbGT
+ * Add @brief keyboard to global keyboard list
+ * @param keyboard The keyboard to register
+ * @return id of keyboard, id used to select or unregister keyboard.
+ *
+ * The keyboard registered here can be selected through hangul_ic_select().
+ * Since @a keyboard is managed by libhangul, the user should not delete it arbitrarily.
+ * It will be deleted in the hangul_fini() function.
  */
 const char*
 hangul_keyboard_list_register_keyboard(HangulKeyboard* keyboard)
@@ -1088,6 +1151,12 @@ hangul_keyboard_list_register_keyboard(HangulKeyboard* keyboard)
  * @param id 삭제할 키보드 id
  * @return 리스트에서 삭제된 HangulKeyboard 의 포인터, 이 포인터는 더이상 libhangul에서
  *         관리하지 않으므로 사용자가 hangul_keyboard_delete() 함수로 삭제해야 한다.
+ *
+ *EbGT
+ * Removed the keyboard specified by @brief id from the global keyboard list.
+ * @param id keyboard id to delete
+ * @return pointer to HangulKeyboard removed from list, this pointer is no longer in libhangul
+ * Since it is not managed, the user must delete it with the hangul_keyboard_delete() function.
  */
 HangulKeyboard*
 hangul_keyboard_list_unregister_keyboard(const char* id)
