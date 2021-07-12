@@ -1,6 +1,10 @@
 = Hangul =
 
-Arduino Library for Hangul text input (wraps libhangul)
+Arduino Library for Hangul text input. 
+
+Wraps Libhangul and converts to RTF-8 char arrays so that the output is arduino read and display ready
+
+More detailed explanation in the Hangul example. 
 
 == License ==
 
