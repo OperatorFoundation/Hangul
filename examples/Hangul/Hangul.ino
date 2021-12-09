@@ -28,15 +28,21 @@
 #include <hangul.h>
 #include <inttypes.h>
 
-char *input = "vkdlTjs gksrmf fkdlqmfjfl xptmxm";//removed |fkdlqmfjfl xptmxm| from back
-char *correct = "파이썬 한글 라이브러리 테스트";//removed |라이브러리 테스트| from back
+String input1 = "vkdlTjs gksrmf fkdlqmfjfl xptmxm";//removed |fkdlqmfjfl xptmxm| from back
+String correct1 = "파이썬 한글 라이브러리 테스트";//removed |라이브러리 테스트| from back
 
+String input2 = "vkdl";
+String correct2 = "파이";
+
+String input3 = "sudT";
+String correct3 = "녕ㅆ";
 
 void setup() {
     Serial.begin(9600);
+    int testnumber = 0;
 }
 
-void loop() 
+bool test(String input, String correct) 
 {
   bool check_if_space;
   bool isfinal;
@@ -46,7 +52,7 @@ void loop()
   HangulInputContext *hic = hangul_ic_new(keyboard); //Brandon says never optimize. This feels very unoptimal. 
   String result = "";
   
-  for(int index=0; index <= strlen(input); index++)
+  for(int index=0; index <= (input.length()); index++)
   {
       //check if space outside of get_Arduino_char!!!!!!!!!
       check_if_space = handle_spaces(input[index]);
@@ -59,8 +65,7 @@ void loop()
       if(check_if_space == 1){
         result = result+' ';
       }
-      Serial.printf("the char is final: %d, there was a space %d, the char is:", isfinal, check_if_space);
-      Serial.println(output); //rendering characters as they ought be displayed in sequence with finality denoted. 
+      //Serial.println(output); //rendering characters as they ought be displayed in sequence with finality denoted. 
   }
     
 
@@ -70,7 +75,23 @@ void loop()
     Serial.println(result);
     Serial.print("Correct: ");
     Serial.println(correct);
+    if(result.equals(correct)){
+      return true;
+      
+    }else{
+      return false;
+    }
 
     delay(3000);
 
-} 
+}
+
+void loop(){
+  bool success = test(input1, correct1);
+  Serial.printf("test %d success: %d \n",1, success);
+  success = test(input2, correct2);
+  Serial.printf("test %d success: %d \n",2, success);
+  success = test(input3, correct3);
+  Serial.printf("test %d success: %d \n",3, success);
+  delay(10000);
+}
