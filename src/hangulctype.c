@@ -21,7 +21,7 @@
 #endif
 
 #include <stdlib.h>
-
+#include <Arduino.h>
 #include "hangul.h"
 
 // Begin Arduino compatibility
@@ -30,6 +30,7 @@
 #include <locale.h>
 #include <strings.h>
 #include <langinfo.h>
+
 // End Arduino compatibility
 
 /**
@@ -2003,6 +2004,7 @@ bool get_arduino_char(HangulInputContext *hic, char keystroke, char *output)
  * *output, passed in as an output parameter, now filled with a character. 
  */
 {
+
   int ret = hangul_ic_process(hic, keystroke);//handles backspaces and keyboards
   uint8_t utf8[4]={0,0,0,0};
   uint8_t pre_edit[4] = {0,0,0,0};
@@ -2032,5 +2034,4 @@ bool get_arduino_char(HangulInputContext *hic, char keystroke, char *output)
     hangul_ic_reset(hic);
     hangul_ic_delete(hic);
  }
-
 // End Arduino compatibility
