@@ -22,7 +22,11 @@
  * that exists in the korean language. 
  * so after the machine has seen enough of the pattern (in this case, four characters), as you enter keys vkdl
  * it will display ㅍ 파 팡 파이 in sequence. Once itknows to move on to a new key, it has a commit string and a new pre-edit string. 
- * In this example, we use isfinal to pass out the statement that libhangul believes a character is final. 
+ * 
+ * This example includes the functions generateLocalBuffer(), test(), and returnHangulText(). 
+ * Of these, generateLocalBuffer runs a loop on input text to convert the keys to the correct symbols, test() allows for inputting
+ * test cases, and returnHangulText() wraps generateLocalBuffer to make it very easy to use (give returnHangulText a string of English
+ * Keystrokes, and it will return the Hangul localization). 
 */
 
 #include <hangul.h>
@@ -37,35 +41,49 @@ String correct2 = "파이";
 String input3 = "sudT";
 String correct3 = "녕ㅆ";
 
+String inputBig = "vkdlTjs gksrmf fkdlqmfjfl xptmxm vkdlTjs gksrmf fkdlqmfjfl xptmxm vkdlTjs gksrmf fkdlqmfjfl xptmxm vkdlTjs gksrmf fkdlqmfjfl xptmxm vkdlTjs gksrmf fkdlqmfjfl xptmxm vkdlTjs gksrmf fkdlqmfjfl xptmxm vkdlTjs gksrmf fkdlqmfjfl xptmxm vkdlTjs gksrmf fkdlqmfjfl xptmxm vkdlTjs gksrmf fkdlqmfjfl xptmxm";
+String correctBig = "파이썬 한글 라이브러리 테스트 파이썬 한글 라이브러리 테스트 파이썬 한글 라이브러리 테스트 파이썬 한글 라이브러리 테스트 파이썬 한글 라이브러리 테스트 파이썬 한글 라이브러리 테스트 파이썬 한글 라이브러리 테스트 파이썬 한글 라이브러리 테스트 파이썬 한글 라이브러리 테스트";
+
+
 void setup() {
     Serial.begin(9600);
     int testnumber = 0;
 }
 
-bool test(String input, String correct) 
-{
-  bool check_if_space;
-  bool isfinal;
-  const char* keyboard = "2";
-  
-  char output[32];
-  HangulInputContext *hic = hangul_ic_new(keyboard); //Brandon says never optimize. This feels very unoptimal. 
-  String result = "";
-  
-  for(int index=0; index <= (input.length()); index++)
-  {
-      //check if space outside of get_Arduino_char!!!!!!!!!
-      check_if_space = handle_spaces(input[index]);
+//generateLocalBuffer handles feeding induvidual keystrokes to the libhangul library, and getting hangul out. 
+String generateLocalBuffer(char keystroke, String result, HangulInputContext *hic){
+      char arduinoChar[32];
+      bool check_if_space;
+      bool isfinal;
+        //check if space outside of get_Arduino_char!!!!!!!!!
+      check_if_space = handle_spaces(keystroke);
       
-      isfinal = get_arduino_char(hic,input[index], output);
+      isfinal = get_arduino_char(hic,keystroke, arduinoChar);
       if(isfinal==true)
       {
-        result = result + output;//in our case, result is rendering the final string as it is formed. 
+        result = result + arduinoChar;//in our case, result is rendering the final string as it is formed. 
       }
       if(check_if_space == 1){
         result = result+' ';
       }
-      //Serial.println(output); //rendering characters as they ought be displayed in sequence with finality denoted. 
+            //Serial.(output); //rendering characters as they ought be displayed in sequence with finality denoted. 
+      return result;
+}
+
+//test returns true or false depending on whether the input, once localized to hangul, matches the correct string,
+//to verify situations and edge cases. 
+bool test(String input, String correct) 
+{
+  
+  const char* keyboard = "2";
+  HangulInputContext *hic = hangul_ic_new(keyboard); //Brandon says never optimize. This feels very unoptimal. 
+  
+  String result = "";
+  
+  for(int index=0; index <= (input.length()); index++)
+  {
+ 
+    result = generateLocalBuffer1(input.charAt(index), result, hic);  
   }
     
 
@@ -86,12 +104,36 @@ bool test(String input, String correct)
 
 }
 
+//returnHangul text runs a loop across a string of english characters to turn them into a string of localized Hangul characters. 
+String returnHangultext(String englishText){
+  const char* keyboard = "2";
+  HangulInputContext *hic = hangul_ic_new(keyboard); //Brandon says never optimize. This feels very unoptimal. 
+  
+  String result = "";
+  
+  for(int index=0; index <= (englishText.length()); index++)
+  {
+ 
+    result = generateLocalBuffer(englishText.charAt(index), result, hic);  
+  }
+  return result;
+}
+
 void loop(){
+  int timestamp1;
+  int timestamp2;
   bool success = test(input1, correct1);
   Serial.printf("test %d success: %d \n",1, success);
   success = test(input2, correct2);
   Serial.printf("test %d success: %d \n",2, success);
   success = test(input3, correct3);
   Serial.printf("test %d success: %d \n",3, success);
+  timestamp1 = millis();
+  success = test(inputBig, correctBig);
+  Serial.printf(" big test, succcess: %d \n", success);
+  timestamp2 = millis();
+ 
+  Serial.print(timestamp2-timestamp1);
   delay(10000);
 }
+
