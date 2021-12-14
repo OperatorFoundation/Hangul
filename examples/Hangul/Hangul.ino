@@ -74,7 +74,6 @@ String generateLocalBuffer(char keystroke, String result, HangulInputContext *hi
 //to verify situations and edge cases. 
 bool test(String input, String correct) 
 {
-  
   const char* keyboard = "2";
   HangulInputContext *hic = hangul_ic_new(keyboard); //Brandon says never optimize. This feels very unoptimal. 
   
@@ -82,11 +81,9 @@ bool test(String input, String correct)
   
   for(int index=0; index <= (input.length()); index++)
   {
- 
-    result = generateLocalBuffer1(input.charAt(index), result, hic);  
+    result = generateLocalBuffer(input.charAt(index), result, hic);  
   }
     
-
     Serial.print("Input:   ");
     Serial.println(input);
     Serial.print("Result:  ");
@@ -101,7 +98,6 @@ bool test(String input, String correct)
     }
 
     delay(3000);
-
 }
 
 //returnHangul text runs a loop across a string of english characters to turn them into a string of localized Hangul characters. 
@@ -136,4 +132,3 @@ void loop(){
   Serial.print(timestamp2-timestamp1);
   delay(10000);
 }
-
