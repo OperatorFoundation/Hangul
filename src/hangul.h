@@ -21,6 +21,7 @@
 
 #include <stdbool.h>
 #include <inttypes.h>
+#include <Arduino.h>
 
 #ifdef __GNUC__
 #define LIBHANGUL_DEPRECATED __attribute__((deprecated));
@@ -172,6 +173,7 @@ const char*  hanja_get_comment(const Hanja* hanja);
 unsigned unicode_codepoint_to_utf8(uint8_t *utf8, uint32_t codepoint);
 bool handle_spaces(char keypress);
 bool get_arduino_char(HangulInputContext *hic, char keystroke, char *output);
+void generateLocalBuffer(char keystroke, char *output);
 
 // End Arduino compatibility
 
