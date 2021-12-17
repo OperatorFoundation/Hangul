@@ -21,10 +21,12 @@
  * libhangul decides whether characters are two or three jamo long based on a Lead, vowel, Tail pattern 
  * that exists in the korean language. 
  * so after the machine has seen enough of the pattern (in this case, four characters), as you enter keys vkdl
- * it will display ㅍ 파 팡 파이 in sequence. Once it knows to move on to a new cell, it has a commit string and pushes that as a final character, and moves on to constructing a new pre-edit string. 
- * by following that process, it builds characters in 1s, 2s, or 3s, based on the pattern. 
- *
- * this example includes composeBufferToDisplayLocalLang(), a function that calls wrapOnSpaces and wrapNoSpaces to handle word-wrapping on a global variable composeBuffer. But the execution loop cheats by adding a trailing space to every string, rather than including any handling for the last word in the segment. 
+ * it will display ㅍ 파 팡 파이 in sequence. Once itknows to move on to a new key, it has a commit string and a new pre-edit string. 
+ * 
+ * This example includes the functions generateLocalBuffer(), test(), and returnHangulText(). 
+ * Of these, generateLocalBuffer runs a loop on input text to convert the keys to the correct symbols, test() allows for inputting
+ * test cases, and returnHangulText() wraps generateLocalBuffer to make it very easy to use (give returnHangulText a string of English
+ * Keystrokes, and it will return the Hangul localization). 
 */
 
 #include <hangul.h>
@@ -41,6 +43,57 @@ String correct3 = "녕ㅆ";
 
 String input4 = "s u d";
 String correct4 = "ㄴ ㅕ ㅇ";
+
+String keying0 = "f";
+String kcorrect0 = "ㄹ";
+
+String keying1 = "fk";
+String kcorrect1 = "라";
+
+String keying2 = "fkd";
+String kcorrect2 = "랑";
+
+String keying3 = "fkdl";
+String kcorrect3 = "라이";
+
+String keying4 = "fkdlq";
+String kcorrect4 = "라입";
+
+String keying5 = "fkdlqm";
+String kcorrect5 = "라이브";
+
+String keying6 = "fkdlqmf";
+String kcorrect6 = "라이블";
+
+String keying7 = "fkdlqmfj";
+String kcorrect7 = "라이브럴";
+
+String keying8 = "fkdlqmfjf";
+String kcorrect8 = "라이브럴";
+
+String keying9 = "fkdlqmfjfl";
+String kcorrect9 = "라이브러리";
+
+//String keying10 = "fkdlqmfjfl ";
+//String kcorrect10 = "라이브러리 ";
+//
+//String keying11 = "fkdlqmfjfl g";
+//String kcorrect11 = "라이브러리 ㅎ"
+//
+//String keying12 = "fkdlqmfjfl gk";
+//String kcorrect12 = "라이브러리 하"
+//
+//String keying13 = "fkdlqmfjfl gks";
+//String kcorrect13 = "라이브러리 한"
+//
+//String keying14 = "fkdlqmfjfl gksr";
+//String kcorrect14 = "라이브러리 한ㄱ"
+//
+//String keying15 = "fkdlqmfjfl gksrm";
+//String kcorrect15 = "라이브러리 한그"
+//
+//String keying16 = "fkdlqmfjfl gksrmf";
+//String kcorrect16 = "라이브러리 한글"
 
 String inputBig = "vkdlTjsgksrmffkdlqmfjflxptmxmvkdlTjsgksrmf fkdlqmfjfl xptmxm vkdlTjs gksrmf fkdlqmfjfl xptmxm vkdlTjs gksrmf fkdlqmfjfl xptmxm vkdlTjs gksrmf fkdlqmfjfl xptmxm vkdlTjs gksrmf fkdlqmfjfl xptmxm vkdlTjs gksrmf fkdlqmfjfl xptmxm vkdlTjs gksrmf fkdlqmfjfl xptmxm vkdlTjs gksrmf fkdlqmfjfl xptmxm";
 String correctBig = "파이썬한글라이브러리테스트파이썬한글라이브러리 테스트 파이썬 한글 라이브러리 테스트 파이썬 한글 라이브러리 테스트 파이썬 한글 라이브러리 테스트 파이썬 한글 라이브러리 테스트 파이썬 한글 라이브러리 테스트 파이썬 한글 라이브러리 테스트 파이썬 한글 라이브러리 테스트";
@@ -202,6 +255,78 @@ void loop(){
   composeBufferToDisplayLocalLang();
   Serial.print("\nun-wrapped text: ");
   Serial.println(correct4);
+
+  Serial.println("++++++++++++++Keying0+++++++++++++++");
+  Serial.print("output: ");
+  composeBuffer = keying0+ " ";
+  composeBufferToDisplayLocalLang();
+  Serial.print("\nun-wrapped text: ");
+  Serial.println(kcorrect0);
+
+  Serial.println("++++++++++++++Keying1+++++++++++++++");
+  Serial.print("output: ");
+  composeBuffer = keying1+ " ";
+  composeBufferToDisplayLocalLang();
+  Serial.print("\nun-wrapped text: ");
+  Serial.println(kcorrect1);
+
+  Serial.println("++++++++++++++Keying2+++++++++++++++");
+  Serial.print("output: ");
+  composeBuffer = keying2+ " ";
+  composeBufferToDisplayLocalLang();
+  Serial.print("\nun-wrapped text: ");
+  Serial.println(kcorrect2);
+
+  Serial.println("++++++++++++++Keying3+++++++++++++++");
+  Serial.print("output: ");
+  composeBuffer = keying3+ " ";
+  composeBufferToDisplayLocalLang();
+  Serial.print("\nun-wrapped text: ");
+  Serial.println(kcorrect3);
+
+  Serial.println("++++++++++++++Keying4+++++++++++++++");
+  Serial.print("output: ");
+  composeBuffer = keying4+ " ";
+  composeBufferToDisplayLocalLang();
+  Serial.print("\nun-wrapped text: ");
+  Serial.println(kcorrect4);
+
+  Serial.println("++++++++++++++Keying5+++++++++++++++");
+  Serial.print("output: ");
+  composeBuffer = keying5+ " ";
+  composeBufferToDisplayLocalLang();
+  Serial.print("\nun-wrapped text: ");
+  Serial.println(kcorrect5);
+
+  Serial.println("++++++++++++++Keying6+++++++++++++++");
+  Serial.print("output: ");
+  composeBuffer = keying6+ " ";
+  composeBufferToDisplayLocalLang();
+  Serial.print("\nun-wrapped text: ");
+  Serial.println(kcorrect6);
+
+  Serial.println("++++++++++++++Keying7+++++++++++++++");
+  Serial.print("output: ");
+  composeBuffer = keying7+ " ";
+  composeBufferToDisplayLocalLang();
+  Serial.print("\nun-wrapped text: ");
+  Serial.println(kcorrect7);
+
+  Serial.println("++++++++++++++Keying8+++++++++++++++");
+  Serial.print("output: ");
+  composeBuffer = keying8+ " ";
+  composeBufferToDisplayLocalLang();
+  Serial.print("\nun-wrapped text: ");
+  Serial.println(kcorrect8);
+
+  Serial.println("++++++++++++++Keying9+++++++++++++++");
+  Serial.print("output: ");
+  composeBuffer = keying9+ " ";
+  composeBufferToDisplayLocalLang();
+  Serial.print("\nun-wrapped text: ");
+  Serial.println(kcorrect9);
+
+  //for(int index = 0; index < 
 
 //  Serial.println("++++++++++++++Test big+++++++++++++++");
 //  Serial.print("output: ");
