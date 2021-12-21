@@ -121,7 +121,7 @@ void setup() {
     Serial.begin(9600);
     int testnumber = 0;
     setupDisplay();
-    displayComposeView();
+    displayHangulTest();
 }
 
 void setupDisplay() 
@@ -136,32 +136,52 @@ void setupDisplay()
   Serial.println("Finished Display Setup");
 }
 
-void displayComposeView()
+void displayHangulTest()
 {
   u8g2Display.firstPage();
   u8g2Display.setFontMode(BLACK); 
   //because display color is inverted we draw a box to clear the screen and set draw color to white for the background
   u8g2Display.drawBox(0, 0, 400, 240);
   u8g2Display.setDrawColor(WHITE);
-  // Draw the compose box to halfway down the screen
-  u8g2Display.drawFrame(PAGE_MARGIN, PAGE_MARGIN, INDENTED_SCREEN_WIDTH, SCREEN_HEIGHT/2);  
 
-  // Print the menu
-  u8g2Display.setCursor(PAGE_MARGIN, SCREEN_HEIGHT/2 + u8g2Display.getMaxCharHeight());
-  cursorY = SCREEN_HEIGHT/2 + u8g2Display.getMaxCharHeight();
-  
-  cursorY += u8g2Display.getMaxCharHeight();
-  u8g2Display.setCursor(PAGE_MARGIN, cursorY);
-  u8g2Display.println("a");
-  u8g2Display.println("ㄴ");
-  u8g2Display.println("녀");
-  u8g2Display.println("녕");
-
-  // Set the cursor inside the compose box and u8g2Display it
+  // Display the test
   u8g2Display.setCursor(PAGE_MARGIN, u8g2Display.getMaxCharHeight());
   cursorY = u8g2Display.getMaxCharHeight();
 
+  u8g2Display.println("a");
+  nextLine();
+  u8g2Display.println("ab");
+  nextLine();
+  u8g2Display.println("abc");
+  nextLine();
+  u8g2Display.println("a b c d e f g h i j k l m k o p q r s t u v w x y z");
+  nextLine();
+  u8g2Display.println("abcdefghijklmkopqrstuvwxyz, abcdefghijklmkopqrstuvwxyz, abcdefghijklmkopqrstuvwxyz, abcdefghijklmkopqrstuvwxyz, abcdefghijklmkopqrstuvwxyz");
+  nextLine();
+  // The next line should display a single Jamo. 
+  u8g2Display.println("ㄴ"); 
+  nextLine();
+  // The next line should display a single different Jamo than the first tested.
+  u8g2Display.println("ㅂ"); 
+  // The next line should display two Jamos.
+  u8g2Display.println("녀");
+  nextLine();
+  // The next line should display one full character. 
+  u8g2Display.println("녕");
+  nextLine();
+  // The next line should display multiple Jamos with spaces between. 
+  u8g2Display.println("반 갑 습 니 다 반 갑 습 니 다"); // Translation: Pleased to meet you. (with spaces between each character)
+  nextLine();
+  // The next line should display long sentences comprised of full characters separated by spaces and commas. 
+  u8g2Display.println("반갑습니다반갑습니다,  오래간만입나다, 어떻게지냈어요, 들어오세요, 영어 할줄압니까?, 또봅시다, 당신 이름이 무엇입니까?, 제이름이 Dennis 입니다, 저는 피곤합니다, 저는 배고픕니다"); // Translation: Pleased to meet you. Long time no see. How have you been? Please come in. Can you speak English?, see you again. What is your name? My name is Dennis. I am tired, I am hungry.
+
   u8g2Display.nextPage();
+}
+
+void nextLine() 
+{
+  cursorY += u8g2Display.getMaxCharHeight();
+  u8g2Display.setCursor(PAGE_MARGIN, cursorY);
 }
 
 static int ucscharlen(const ucschar *str)
