@@ -21,10 +21,10 @@
 #endif
 
 #include <stdlib.h>
-#include <Arduino.h>
 #include "hangul.h"
 
 // Begin Arduino compatibility
+#include <Arduino.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <locale.h>
@@ -1915,6 +1915,7 @@ hangul_jamos_to_syllables(ucschar* dest, int destlen, const ucschar* src, int sr
 
 // Begin Arduino compatibility
 
+
 unsigned unicode_codepoint_to_utf8(uint8_t *utf8, uint32_t codepoint) {
   /*Function Unicode_CodepointToUTF8()
    * a function which converts from an int unicode codepoint to a utf8 int. 
@@ -2017,7 +2018,7 @@ bool get_arduino_char(HangulInputContext *hic, char keystroke, char *output)
     const ucschar *preedit_string = hangul_ic_get_preedit_string(hic);
     unsigned len2 = unicode_codepoint_to_utf8(pre_edit, *preedit_string);
     single = ((char *)pre_edit);
-    memcpy(output, single, sizeof(ucschar)+1));
+    memcpy(output, single, sizeof(ucschar));
     return false;
   } 
   else 
@@ -2026,7 +2027,7 @@ bool get_arduino_char(HangulInputContext *hic, char keystroke, char *output)
     single = (char *)utf8;
     
        
-    memcpy(output, single, sizeof(ucschar)+1));
+    memcpy(output, single, sizeof(ucschar));
     return true;
     
   }
@@ -2058,17 +2059,28 @@ bool get_arduino_char(HangulInputContext *hic, char keystroke, char *output)
   if (*commit_string == 0)
   {
     const ucschar *preedit_string = hangul_ic_get_preedit_string(hic);
-    memcpy(output, preedit_string, sizeof(ucschar)+1);
+    int index = 0;
+    while(preedit_string[index]!=0)
+    {
+      index++;
+    }
+    memcpy(output, preedit_string, sizeof(ucschar));
     return false;
   }
   else
   {      
-    memcpy(output, commit_string, sizeof(ucschar)+1);
+    memcpy(output, commit_string, sizeof(ucschar));
     return true;
-    
   }
-
-  hangul_ic_reset(hic);
-  hangul_ic_delete(hic);
+  //hangul_ic_reset(hic);
+  //hangul_ic_delete(hic);
  }
+
+static int ucscharlen(const ucschar *str)
+{
+    const ucschar *end = str;
+    while (*end != 0)
+  end++;
+    return end - str;
+}
 // End Arduino compatibility
