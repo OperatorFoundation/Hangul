@@ -172,6 +172,7 @@ const char*  hanja_get_comment(const Hanja* hanja);
 // Begin Arduino compatibility
 unsigned unicode_codepoint_to_utf8(uint8_t *utf8, uint32_t codepoint);
 bool handle_spaces(char keypress);
+ucschar handle_escaped_chars(char keypress);
 bool get_arduino_char(HangulInputContext *hic, char keystroke, char *output);
 bool get_utf32_char(HangulInputContext *hic, char keystroke, ucschar *output);
 void generateLocalBuffer(char keystroke, char *output);

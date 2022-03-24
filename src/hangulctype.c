@@ -1969,6 +1969,28 @@ unsigned unicode_codepoint_to_utf8(uint8_t *utf8, uint32_t codepoint) {
   return 0;
 }
 
+ucschar handle_escaped_chars(char keypress)
+{
+/*A function to check if the keypress is a space, comma, period, or numeral, and pass them to the renderer
+ * ++++++++++
+ * Paramaters
+ * keypress: character being keyed in. 
+ * ++++++
+ * Returns the unicode point for the character sent in. 
+ */
+  char escaped_chars[] =           {' ', ',', '.', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'};
+  ucschar unicode_escaped_chars[] = {32,  44,  46, 48,   49,  50,  51,  52,  53,  54,  55,  56,  57};
+  for(int index = 0; index <= 12; index++)
+  {
+    if (keypress == escaped_chars[index])
+    {
+      return unicode_escaped_chars[index];
+    }
+  }
+
+  return 100;
+}
+
 bool handle_spaces(char keypress)
 {
 /*A function to check if the keypress is a space and pass them to the renderer(because libhangul's space handler is hiding)

@@ -21,6 +21,8 @@ hangul_ic_delete	KEYWORD2
 hangul_ic_preedit_string	KEYWORD2
 hangul_ic_get_commit_string	KEYWORD2
 handle_spaces		KEYWORD2
+handle_escaped_chars KEYWORD2
+get_utf32_char KEYWORD2
 get_arduino_char 	KEYWORD2
 handle_bad_codepoint 	KEYWORD2
 unicode_codepoint_to_utf8 	KEYWORD2
